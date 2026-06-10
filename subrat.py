@@ -704,7 +704,17 @@ def run_scan(
         ))
 
     # ── Setup resolver ────────────────────────────────────
-    resolver = dns.resolver.Resolver()
+    try:
+        resolver = dns.resolver.Resolver()
+    except dns.resolver.NoResolverConfiguration:
+        # Fallback for systems without /etc/resolv.conf (e.g., Termux/Android)
+        resolver = dns.resolver.Resolver(configure=False)
+        resolver.nameservers = ['8.8.8.8', '8.8.4.4']  # Google DNS
+        print(c(
+            "[*] Using fallback resolver (Google DNS) – /etc/resolv.conf not found",
+            Color.YELLOW
+        ))
+    
     if resolver_ip:
         # Support multiple resolvers
         ips = [ip.strip() for ip in resolver_ip.split(',')]
